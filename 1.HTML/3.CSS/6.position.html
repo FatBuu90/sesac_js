@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+        div{
+            width: 100px;
+            height: 100px;
+            background-color: orange;
+            color: white;
+            margin: 5px;
+        }
+        .move1{
+            background-color: orangered;
+            /* 기존 위치를 기준(상대적인 위치) - 위쪽 div가 차지하는 공간을 제외 */
+            position: relative;
+            /* 위에서 50px 만큼 왼쪽에서 50px만큼 이동 */
+            top: 50px;
+            left: 50px;
+        }
+        .move2{
+            background-color: skyblue;
+            /* 절대적인 위치(전체공간)을 기준 */
+            position: absolute;
+            top: 50px;
+            left: 50px;
+        }
+        .text{
+            position: relative;
+            width: 50%;
+            top: 88%;
+            left: 25%;
+            color: white;
+        }
+        .picture{
+            position: relative;
+            width: 300px;
+            height: 350px;
+            background-image: url(images/faker.jfif);
+            background-size: 100% 100%;
+            border: 2px solid black;
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>절대위치와 상대위치</h1>
+    <div>1</div>    
+    <div class="move1">2</div>    
+    <div class="move2">3</div>    
+    <div class="picture"><p class="text">젠장 또 대상혁이야..</p></div>    
+</body>
+</html>
