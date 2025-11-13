@@ -12,10 +12,10 @@
             <!-- 주석을 편하게 쓰는 방법 // 편집 메뉴에서 Ctrl + / -->
             <lable>아이디</lable>
             <!-- name은 서버로 전송할 때의 "KEY", 사용자가 입력한 값은 "VALUE"라고 불리며 전송됨" -->
-            <input type="text" name="id">아이디
+            <input type="text" name="id" placeholder="아이디를 입력해주세요">아이디
             <lable>비밀번호</lable>
             <!-- 패스워드를 예로 들면 pwd가 "KEY", 사용자가 입력한 비밀번호가 "VALUE" 이다. -->
-            <input type="password" name="pwd">비밀번호
+            <input type="password" name="pwd" placeholder="비밀번호를 입력해주세요">비밀번호
             <!-- submit 타입은 실제로 이 form에 입력된 모든 값을 다 합쳐서 서버로 보내는 기능 -->
             <input type="submit" value="로그인">
         </form>
@@ -33,7 +33,7 @@
         <h2>네이버 따라하기</h2>
         <form method="get">
             <label>검색</label>
-            <input type="text" name="query">
+            <input type="text" name="query" placeholder="키워드를 입력해주세요">
             <input type="submit" name="검색">
         </form>
     </body>
