@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>좌석배치기 (프론트엔드)</title>
+  <style>
+    :root{
+      --bg:#f6f8fa;
+      --table:#fff;
+      --accent:#2b8aef;
+      --muted:#6b7280;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;padding:24px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif;background:var(--bg);color:#111;
+      display:flex;flex-direction:column;gap:16px;align-items:center;
+    }
+    h1{margin:0;font-size:20px}
+    .controls{display:flex;gap:8px;align-items:center}
+    button{
+      background:var(--accent);color:white;border:0;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(43,138,239,.18);
+    }
+    button.secondary{background:#e5e7eb;color:#111}
+    .room{
+      width:960px;max-width:95vw;height:640px;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);border-radius:14px;padding:20px;box-shadow:0 6px 24px rgba(12,16,20,.06);
+      display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:24px;align-items:center;justify-items:center;
+    }
+    /* Table visual styles */
+    .table{
+      background:var(--table);border-radius:14px;padding:14px;box-shadow:0 4px 12px rgba(16,24,40,.06);display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;
+      min-width:220px;min-height:120px;position:relative;
+    }
+    .table .label{position:absolute;top:8px;left:12px;font-size:12px;color:var(--muted)}
+    /* Different table shapes */
+    .table.four{width:360px;height:160px;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;padding:12px}
+    .table.inner {border:2px dashed rgba(43,138,239,.08)}
+    .table.three{width:300px;height:140px;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;padding:12px}
+    .table.two{width:220px;height:120px;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;padding:12px}
+    .seat{
+      display:flex;align-items:center;justify-content:center;height:54px;border-radius:10px;background:linear-gradient(180deg,#ffffff,#fbfdff);font-weight:700;box-shadow:inset 0 -2px 0 rgba(16,24,40,.03);text-align:center;padding:6px;font-size:14px;
+    }
+    .seat.empty{background:transparent;font-weight:400;color:var(--muted)}
+    .meta{display:flex;gap:12px;align-items:center;color:var(--muted);font-size:13px}
+    footer{font-size:12px;color:var(--muted)}
+    @media (max-width:720px){
+      .room{grid-template-columns:1fr;grid-template-rows:repeat(4,auto);height:auto;padding:12px}
+      .table.four{width:92%;height:140px}
+    }
+  </style>
+</head>
+<body>
+  <header style="width:960px;max-width:95vw;display:flex;justify-content:space-between;align-items:center">
+    <h1>좌석배치기 — 프론트엔드 단일 파일</h1>
+    <div class="controls">
+      <button id="shuffleBtn">좌석배치 (랜덤)</button>
+      <button id="randomizeBtn" class="secondary">다시 섞기</button>
+    </div>
+  </header>
+
+  <main class="room" role="main" aria-label="강의실 좌석">
+    <!-- 바깥쪽 4인 테이블 -->
+    <section class="table four outer" id="table-outer" aria-label="바깥쪽 4인 테이블">
+      <div class="label">바깥 4인 테이블</div>
+      <div class="seat" data-seat="outer-0"></div>
+      <div class="seat" data-seat="outer-1"></div>
+      <div class="seat" data-seat="outer-2"></div>
+      <div class="seat" data-seat="outer-3"></div>
+    </section>
+
+    <!-- 안쪽 4인 테이블 -->
+    <section class="table four inner" id="table-inner" aria-label="안쪽 4인 테이블">
+      <div class="label">안쪽 4인 테이블</div>
+      <div class="seat" data-seat="inner-0"></div>
+      <div class="seat" data-seat="inner-1"></div>
+      <div class="seat" data-seat="inner-2"></div>
+      <div class="seat" data-seat="inner-3"></div>
+    </section>
+
+    <!-- 3인 테이블 -->
+    <section class="table three" id="table-three" aria-label="3인 테이블">
+      <div class="label">3인 테이블</div>
+      <div class="seat" data-seat="three-0"></div>
+      <div class="seat" data-seat="three-1"></div>
+      <div class="seat" data-seat="three-2"></div>
+    </section>
+
+    <!-- 2인 테이블 -->
+    <section class="table two" id="table-two" aria-label="2인 테이블">
+      <div class="label">2인 테이블</div>
+      <div class="seat" data-seat="two-0"></div>
+      <div class="seat" data-seat="two-1"></div>
+    </section>
+  </main>
+
+  <footer style="width:960px;max-width:95vw;display:flex;justify-content:space-between;align-items:center">
+    <div class="meta">학생 수: <strong id="count">13</strong></div>
+    <div class="meta">랜덤 배치 — 새로고침 없이 버튼으로 재배치 가능</div>
+  </footer>
+
+  <script>
+    // 학생 명단 (13명)
+    const students = [
+      '신지원','남기정','변영찬','김윤군','이지안','김준성','김주연','공정배','이유랑','노정운','장수빈','박호정','조진희'
+    ];
+
+    // 좌석 순서 (총 13자리)
+    const seatSelectors = [
+      '[data-seat="outer-0"]','[data-seat="outer-1"]','[data-seat="outer-2"]','[data-seat="outer-3"]',
+      '[data-seat="inner-0"]','[data-seat="inner-1"]','[data-seat="inner-2"]','[data-seat="inner-3"]',
+      '[data-seat="three-0"]','[data-seat="three-1"]','[data-seat="three-2"]',
+      '[data-seat="two-0"]','[data-seat="two-1"]'
+    ];
+
+    function shuffleArray(arr){
+      // Fisher–Yates shuffle (안전한 랜덤 셔플)
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+
+    function assignSeats(){
+      const shuffled = shuffleArray(students);
+      // 모든 좌석 엘리먼트 가져오기
+      seatSelectors.forEach((sel, idx)=>{
+        const el = document.querySelector(sel);
+        if(!el) return;
+        const name = shuffled[idx] || '';
+        el.textContent = name || '';
+        el.classList.toggle('empty', !name);
+      });
+      // update count
+      document.getElementById('count').textContent = students.length;
+    }
+
+    // 이벤트 연결
+    document.getElementById('shuffleBtn').addEventListener('click',assignSeats);
+    document.getElementById('randomizeBtn').addEventListener('click',assignSeats);
+
+    // 페이지 로드 시 자동 배치
+    window.addEventListener('load',assignSeats);
+  </script>
+</body>
+</html>

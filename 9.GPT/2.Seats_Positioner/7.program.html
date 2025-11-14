@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>랜덤 좌석 배치</title>
+  <style>
+    :root{
+      --bg:#f6f8fa;
+      --table:#fff;
+      --accent:#2b8aef;
+      --muted:#6b7280;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;padding:24px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif;background:var(--bg);color:#111;
+      display:flex;flex-direction:column;gap:16px;align-items:center;
+    }
+    h1{margin:0;font-size:20px}
+    .controls{display:flex;gap:8px;align-items:center}
+    button{
+      background:var(--accent);color:white;border:0;padding:10px 14px;border-radius:8px;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(43,138,239,.18);
+    }
+    .room{
+      width:1100px;max-width:95vw;height:720px;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);border-radius:14px;padding:20px;box-shadow:0 6px 24px rgba(12,16,20,.06);
+      display:grid;grid-template-columns:120px 1fr 1fr 120px;grid-template-rows:90px 1fr 1fr;gap:20px;align-items:start;justify-items:center;
+      grid-template-areas:
+        "monitor monitor monitor monitor"
+        "locker t1 t2 instructor"
+        "door t3 t4 smallmon";
+    }
+    .monitor{
+      grid-area:monitor;
+      width:60%;height:64px;border-radius:10px;background:linear-gradient(90deg,#111827,#374151);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:1px;box-shadow:0 6px 18px rgba(17,24,39,.12);
+    }
+    .locker{grid-area:locker;width:120px;height:180px;display:flex;align-items:center;justify-content:center}
+    .door{grid-area:door;width:50px;height:120px;display:flex;align-items:center;justify-content:center}
+    .instructor{grid-area:instructor;width:120px;height:150px;display:flex;align-items:center;justify-content:center}
+    .smallmon{grid-area:smallmon;width:50px;height:120px;display:flex;align-items:center;justify-content:center}
+    .fixed-box{width:100%;height:100%;border-radius:10px;background:linear-gradient(90deg,#111827,#374151);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:0.6px;box-shadow:0 6px 18px rgba(17,24,39,.08)}
+    .small-box{background:linear-gradient(90deg,#1f2937,#4b5563);font-size:13px}
+    .table{
+      background:var(--table);border-radius:14px;padding:14px;box-shadow:0 4px 12px rgba(16,24,40,.06);display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;position:relative;
+      min-width:220px;min-height:120px;
+      margin-top:5px;
+      margin-bottom:5px;
+    }
+    .table .label{position:absolute;top:8px;left:12px;font-size:12px;color:var(--muted)}
+    .table.four{width:360px;height:180px;display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);padding:12px}
+    .table.four.facing{transform: rotate(180deg);}
+    .table.four.facing .seat{transform: rotate(180deg);}
+    .table.three{width:300px;height:90px;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;padding:12px}
+    .table.two{width:220px;height:90px;display:grid;grid-template-columns:repeat(2,1fr);grid-auto-rows:1fr;padding:12px}
+    .seat{
+      display:flex;align-items:center;justify-content:center;height:54px;border-radius:10px;background:linear-gradient(180deg,#e0f2ff,#f0f9ff);font-weight:700;box-shadow:inset 0 -2px 0 rgba(16,24,40,.03);text-align:center;padding:6px;font-size:14px;
+    }
+    .seat.empty{background:transparent;font-weight:400;color:var(--muted)}
+    .meta{display:flex;gap:12px;align-items:center;color:var(--muted);font-size:13px}
+    footer{font-size:12px;color:var(--muted)}
+    #table-1{grid-area:t1}
+    #table-2{grid-area:t2}
+    #table-3{grid-area:t3}
+    #table-4{grid-area:t4}
+  </style>
+</head>
+<body>
+  <header style="width:1100px;max-width:95vw;display:flex;justify-content:space-between;align-items:center">
+    <h1>랜덤 좌석 배치</h1>
+    <div class="controls">
+      <button id="shuffleBtn">좌석배치 (랜덤)</button>
+      <button id="saveBtn">좌석배치 완료</button>
+    </div>
+  </header>
+  <main class="room" role="main" aria-label="강의실 좌석">
+    <div class="monitor" aria-hidden="true">모니터</div>
+    <div class="locker"><div class="fixed-box">사물함</div></div>
+    <section class="table four" id="table-1" aria-label="테이블1 - 왼쪽 4인 테이블">
+      <div class="label">테이블1 (4인)</div>
+      <div class="seat" data-seat="t1-0"></div>
+      <div class="seat" data-seat="t1-1"></div>
+      <div class="seat" data-seat="t1-2"></div>
+      <div class="seat" data-seat="t1-3"></div>
+    </section>
+    <section class="table four" id="table-2" aria-label="테이블2 - 오른쪽 4인 테이블">
+      <div class="label">테이블2 (4인)</div>
+      <div class="seat" data-seat="t2-0"></div>
+      <div class="seat" data-seat="t2-1"></div>
+      <div class="seat" data-seat="t2-2"></div>
+      <div class="seat" data-seat="t2-3"></div>
+    </section>
+    <div class="instructor"><div class="fixed-box">강사님 테이블</div></div>
+    <div class="door"><div class="fixed-box">출입문</div></div>
+    <section class="table three" id="table-3" aria-label="테이블3 - 3인 테이블">
+      <div class="label">테이블3 (3인)</div>
+      <div class="seat" data-seat="t3-0"></div>
+      <div class="seat" data-seat="t3-1"></div>
+      <div class="seat" data-seat="t3-2"></div>
+    </section>
+    <section class="table two" id="table-4" aria-label="테이블4 - 2인 테이블">
+      <div class="label">테이블4 (2인)</div>
+      <div class="seat" data-seat="t4-0"></div>
+      <div class="seat" data-seat="t4-1"></div>
+    </section>
+    <div class="smallmon"><div class="fixed-box small-box">작은 모니터</div></div>
+  </main>
+  <footer style="width:1100px;max-width:95vw;display:flex;justify-content:space-between;align-items:center">
+    <div class="meta">학생 수: <strong id="count">13</strong></div>
+    <div class="meta">모니터가 앞에 있는 배치 · 고정 요소 포함</div>
+  </footer>
+  <script>
+    const students = ['신지원','남기정','변영찬','김윤군','이지안','김준성','김주연','공정배','이유랑','노정운','장수빈','박호정','조진희'];
+    const seatSelectors = ['[data-seat="t1-0"]','[data-seat="t1-1"]','[data-seat="t1-2"]','[data-seat="t1-3"]','[data-seat="t2-0"]','[data-seat="t2-1"]','[data-seat="t2-2"]','[data-seat="t2-3"]','[data-seat="t3-0"]','[data-seat="t3-1"]','[data-seat="t3-2"]','[data-seat="t4-0"]','[data-seat="t4-1"]'];
+    function shuffleArray(arr){
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]] = [a[j],a[i]];
+      }
+      return a;
+    }
+    function assignSeats(saved=false){
+      let shuffled = saved ? JSON.parse(localStorage.getItem('seatArrangement') || '[]') : shuffleArray(students);
+      seatSelectors.forEach((sel, idx)=>{
+        const el = document.querySelector(sel);
+        if(!el) return;
+        const name = shuffled[idx] || '';
+        el.textContent = name || '';
+        el.classList.toggle('empty', !name);
+      });
+      document.getElementById('count').textContent = students.length;
+    }
+    document.getElementById('shuffleBtn').addEventListener('click',()=>assignSeats(false));
+    document.getElementById('saveBtn').addEventListener('click',()=>{
+      const seatData = seatSelectors.map(sel=>document.querySelector(sel)?.textContent || '');
+      localStorage.setItem('seatArrangement', JSON.stringify(seatData));
+      alert('좌석 배치가 저장되었습니다!');
+    });
+    window.addEventListener('load',()=>{
+      if(localStorage.getItem('seatArrangement')){
+        assignSeats(true);
+      } else {
+        assignSeats(false);
+      }
+    });
+  </script>
+</body>
+</html>
