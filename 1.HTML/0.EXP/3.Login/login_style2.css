@@ -1,0 +1,95 @@
+.social_login{
+    display: flex;
+    align-items: center;
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.social_login:hover {
+    transform: scale(1.05); 
+}
+.social_login img {
+    width: 100%;
+    height: 50px;
+}
+.login_box{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20%;
+}
+
+form{
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+}
+.grid_row4{
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+}
+.grid_row2{
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 5px;
+}
+.grid_col{
+    margin: 10px 0 -8px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+.grid_col input:hover{
+    cursor: pointer;
+}
+.container{
+    cursor: pointer;
+    width: 300px;
+    height: 300px;
+    position: relative;
+}
+.btn, .hidden{
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+.btn{
+    border: 2px solid skyblue;
+    background-color: skyblue;
+    width: 300px;
+    height: 300px;
+    transition: opacity 0.25s ease;
+    opacity: 1;
+    pointer-events: auto;
+    will-change: opacity;
+}
+.hidden{
+    padding: 10px;
+    border: 2px solid black;
+    background-color: white;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    will-change: opacity;
+}
+.hidden .social_login{
+    transition: opacity 0.1s ease;
+}
+
+.container:hover .btn{
+  opacity: 0;            
+  pointer-events: none; 
+}
+
+.container:hover .hidden{
+  opacity: 1;           
+  visibility: visible;
+  pointer-events: auto;  
+}
