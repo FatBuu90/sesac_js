@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>길 건너 친구들</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+    font-family: sans-serif;
+  }
+
+  .game {
+    position: relative;
+    width: 400px;
+    height: 600px;
+    background-color: lightgreen; /* 잔디 */
+    overflow: hidden;
+    border: 2px solid #333;
+  }
+
+  .road {
+    position: absolute;
+    width: 100%;
+    height: 100px;
+    background-color: gray;
+  }
+
+  .road:nth-child(2) { top: 200px; } /* 첫 번째 도로 */
+  .road:nth-child(3) { top: 300px; } /* 두 번째 도로 */
+  .road:nth-child(4) { top: 400px; } /* 세 번째 도로 */
+
+  .player {
+    position: absolute;
+    bottom: 10px; /* 안전지대 시작 위치 */
+    left: 180px;
+    width: 40px;
+    height: 40px;
+    background-color: red;
+    border-radius: 50%;
+    z-index: 10; /* 항상 위에 표시 */
+  }
+
+  .car {
+    position: absolute;
+    width: 60px;
+    height: 40px;
+    background-color: blue;
+    top: 30px;
+  }
+
+  @keyframes moveRight {
+    0% { left: -60px; }
+    100% { left: 400px; }
+  }
+
+  @keyframes moveLeft {
+    0% { left: 400px; }
+    100% { left: -60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="game">
+  <div class="player"></div>
+
+  <!-- 안전지대(도로 아님) -->
+  <div style="position:absolute; top:0; width:100%; height:200px; background-color: lightgreen;"></div>
+
+  <!-- 도로와 장애물 -->
+  <div class="road">
+    <div class="car" style="animation: moveRight 3s linear infinite;"></div>
+    <div class="car" style="animation: moveRight 4s linear infinite; top:60px;"></div>
+  </div>
+
+  <div class="road">
+    <div class="car" style="animation: moveLeft 3s linear infinite;"></div>
+    <div class="car" style="animation: moveLeft 4s linear infinite; top:60px;"></div>
+  </div>
+
+  <div class="road">
+    <div class="car" style="animation: moveRight 5s linear infinite;"></div>
+    <div class="car" style="animation: moveRight 6s linear infinite; top:60px;"></div>
+  </div>
+</div>
+
+<script>
+const player = document.querySelector('.player');
+const game = document.querySelector('.game');
+let playerPos = { x: 180, y: 550 }; // 초기 안전지대 위치
+
+// 키보드 이동
+document.addEventListener('keydown', e => {
+  if(e.key === 'ArrowUp') playerPos.y -= 50;
+  if(e.key === 'ArrowDown') playerPos.y += 50;
+  if(e.key === 'ArrowLeft') playerPos.x -= 50;
+  if(e.key === 'ArrowRight') playerPos.x += 50;
+
+  // 화면 경계 체크
+  if(playerPos.x < 0) playerPos.x = 0;
+  if(playerPos.x > 360) playerPos.x = 360;
+  if(playerPos.y < 0) playerPos.y = 0;
+  if(playerPos.y > 560) playerPos.y = 560;
+
+  player.style.left = playerPos.x + 'px';
+  player.style.top = playerPos.y + 'px';
+});
+
+// 충돌 감지
+function checkCollision() {
+  const playerRect = player.getBoundingClientRect();
+  const cars = document.querySelectorAll('.car');
+  for(const car of cars) {
+    const carRect = car.getBoundingClientRect();
+    if(!(playerRect.right < carRect.left || 
+         playerRect.left > carRect.right || 
+         playerRect.bottom < carRect.top || 
+         playerRect.top > carRect.bottom)) {
+      alert('게임 오버!');
+      // 안전지대로 초기화
+      playerPos = { x: 180, y: 550 };
+      player.style.left = playerPos.x + 'px';
+      player.style.top = playerPos.y + 'px';
+    }
+  }
+}
+
+// 충돌 체크 주기
+setInterval(checkCollision, 50);
+</script>
+
+</body>
+</html>

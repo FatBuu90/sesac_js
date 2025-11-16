@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>길 건너 친구들</title>
+<style>
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: #a0d8a0;
+  overflow: hidden;
+}
+
+/* 화면 표시 영역 */
+.game-container {
+  width: 600px;
+  height: 600px;
+  overflow: hidden;
+  position: relative;
+  margin: 20px auto;
+  border: 2px solid #333;
+  background-color: lightgreen;
+}
+
+/* 게임판 */
+.game {
+  position: absolute;
+  width: 16*50px; /* 16칸 */
+  height: 36*50px; /* 36칸 */
+}
+
+/* 플레이어 */
+.player {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: red;
+  z-index: 10;
+}
+
+/* 도로 */
+.road {
+  position: absolute;
+  width: 100%;
+  height: 50px;
+  background-color: gray;
+}
+
+/* 차량 */
+.car {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: blue;
+}
+
+/* 골인점 */
+.finish {
+  position: absolute;
+  width: 100%;
+  height: 50px;
+  background-color: gold;
+  text-align: center;
+  line-height: 50px;
+  font-weight: bold;
+}
+
+/* HUD */
+.hud {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  color: black;
+  font-weight: bold;
+  text-align: right;
+  z-index: 20;
+}
+
+/* 차량 애니메이션 */
+@keyframes moveRight {
+  0% { left: -50px; }
+  100% { left: 800px; }
+}
+@keyframes moveLeft {
+  0% { left: 800px; }
+  100% { left: -50px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hud">
+  <div>Stage: <span id="stage">01</span></div>
+  <div>Point: <span id="point">0</span></div>
+</div>
+
+<div class="game-container">
+  <div class="game" id="game">
+    <!-- 골인점 -->
+    <div class="finish" style="top:0;">골인!</div>
+
+    <!-- 안전지대 (최하단 시작지점 + 골인 포함 최대 5줄) -->
+    <div style="position:absolute; top:0; width:100%; height:250px; background-color: lightgreen;"></div>
+
+    <!-- 도로 -->
+    <div class="road" style="top:250px;">
+      <div class="car" style="top:0; animation: moveRight 3s linear infinite;"></div>
+      <div class="car" style="top:0; animation: moveRight 5s linear infinite; left:150px;"></div>
+    </div>
+    <div class="road" style="top:300px;">
+      <div class="car" style="top:0; animation: moveLeft 4s linear infinite;"></div>
+      <div class="car" style="top:0; animation: moveLeft 6s linear infinite; left:200px;"></div>
+    </div>
+    <div class="road" style="top:350px;">
+      <div class="car" style="top:0; animation: moveRight 5s linear infinite;"></div>
+      <div class="car" style="top:0; animation: moveRight 7s linear infinite; left:100px;"></div>
+    </div>
+
+    <!-- 플레이어 -->
+    <div class="player" id="player"></div>
+  </div>
+</div>
+
+<script>
+const game = document.getElementById('game');
+const player = document.getElementById('player');
+const stageDisplay = document.getElementById('stage');
+const pointDisplay = document.getElementById('point');
+
+const tileSize = 50;
+const gameWidth = 16 * tileSize;
+const gameHeight = 36 * tileSize;
+
+let playerPos = { x: 7*tileSize, y: 30*tileSize }; // 안전지대 시작
+let stage = 1;
+let point = 0;
+
+player.style.left = playerPos.x + 'px';
+player.style.top = playerPos.y + 'px';
+
+// 화면 중앙 유지
+function updateCamera() {
+  const container = document.querySelector('.game-container');
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+
+  let offsetX = playerPos.x + tileSize/2 - containerWidth/2;
+  let offsetY = playerPos.y + tileSize/2 - containerHeight/2;
+
+  if(offsetX < 0) offsetX = 0;
+  if(offsetY < 0) offsetY = 0;
+  if(offsetX > gameWidth - containerWidth) offsetX = gameWidth - containerWidth;
+  if(offsetY > gameHeight - containerHeight) offsetY = gameHeight - containerHeight;
+
+  game.style.left = -offsetX + 'px';
+  game.style.top = -offsetY + 'px';
+}
+
+// 키보드 이동 및 포인트 증가
+document.addEventListener('keydown', e => {
+  let moved = false;
+  if(e.key === 'ArrowUp') { playerPos.y -= tileSize; moved = true; }
+  if(e.key === 'ArrowDown') { playerPos.y += tileSize; moved = true; }
+  if(e.key === 'ArrowLeft') { playerPos.x -= tileSize; }
+  if(e.key === 'ArrowRight') { playerPos.x += tileSize; }
+
+  if(playerPos.x < 0) playerPos.x = 0;
+  if(playerPos.x > gameWidth - tileSize) playerPos.x = gameWidth - tileSize;
+  if(playerPos.y < 0) playerPos.y = 0;
+  if(playerPos.y > gameHeight - tileSize) playerPos.y = gameHeight - tileSize;
+
+  if(moved) {
+    point += 10;
+    pointDisplay.textContent = point;
+  }
+
+  player.style.left = playerPos.x + 'px';
+  player.style.top = playerPos.y + 'px';
+  updateCamera();
+
+  // 골인 체크
+  if(playerPos.y <= 0) {
+    alert('클리어!');
+    stage += 1;
+    stageDisplay.textContent = stage.toString().padStart(2,'0');
+    playerPos = { x: 7*tileSize, y: 30*tileSize };
+    point = 0;
+    pointDisplay.textContent = point;
+    updateCamera();
+  }
+});
+
+// 충돌 체크 (도로 위에서만)
+function checkCollision() {
+  const playerRect = player.getBoundingClientRect();
+  const roads = document.querySelectorAll('.road');
+
+  roads.forEach(road => {
+    const roadRect = road.getBoundingClientRect();
+    if(playerRect.bottom > roadRect.top && playerRect.top < roadRect.bottom) {
+      const cars = road.querySelectorAll('.car');
+      for(const car of cars){
+        const carRect = car.getBoundingClientRect();
+        if(!(playerRect.right < carRect.left ||
+             playerRect.left > carRect.right ||
+             playerRect.bottom < carRect.top ||
+             playerRect.top > carRect.bottom)) {
+          alert('게임 오버!');
+          playerPos = { x: 7*tileSize, y: 30*tileSize };
+          point = 0;
+          pointDisplay.textContent = point;
+          player.style.left = playerPos.x + 'px';
+          player.style.top = playerPos.y + 'px';
+          updateCamera();
+        }
+      }
+    }
+  });
+}
+
+setInterval(checkCollision, 50);
+</script>
+</body>
+</html>
