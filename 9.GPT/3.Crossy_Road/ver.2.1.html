@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>스크롤 도로 게임</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #111;
+      color: #eee;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* 보이는 게임판: 세로 11칸만 보여줌 */
+    #game-container {
+      position: relative;
+      width: 450px;          /* 9열 × 50px (가로는 그대로 9칸) */
+      height: 550px;         /* 보이는 건 11칸 × 50px */
+      overflow: hidden;
+      border: 4px solid #444;
+      border-radius: 8px;
+      background: #222;
+    }
+
+    #ui {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 20;
+      font-size: 14px;
+      background: rgba(0,0,0,0.5);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    /* 실제 보드: 20행 전체 */
+    #board {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 450px;
+      height: 1000px;        /* 20행 × 50px */
+      z-index: 1;
+    }
+
+    .row {
+      position: relative;
+      width: 100%;
+      height: 50px;
+      display: flex;
+    }
+
+    .cell {
+      flex: 0 0 50px;
+      height: 50px;
+      /* 격자 보더 제거 */
+      /* border: 1px solid #333; */
+    }
+
+    /* 지형 스타일 */
+    .safe {
+      background: #b7f5b0; /* 연한 녹색 계열 */
+    }
+
+    .road {
+      background: #555;
+      position: relative;
+    }
+
+    /* 도로 중앙선: 가로 방향 점선 */
+    .road-line {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      height: 6px; /* 얇은 가로선 */
+      background: repeating-linear-gradient(
+        to right,
+        #ddd 0,
+        #ddd 20px,
+        transparent 20px,
+        transparent 40px
+      );
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    /* 차량 레이어 (보드와 같은 크기) */
+    #cars-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 450px;
+      height: 1000px;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .car {
+      position: absolute;
+      height: 40px;
+      top: 5px; /* 도로 중앙에 맞추기 */
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.6);
+    }
+
+    /* 캐릭터: 45x45, 한 칸 중앙 */
+    #player {
+      position: absolute;
+      width: 45px;
+      height: 45px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 30% 30%, #fff, #ffcc00);
+      border: 2px solid #333;
+      z-index: 10; /* 가장 위 */
+      box-shadow: 0 0 8px rgba(255,255,255,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #message-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #fff;
+      z-index: 30;
+      font-size: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #message-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #message-overlay button {
+      margin-top: 16px;
+      padding: 8px 16px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="ui">
+      스테이지: <span id="stage-text">1</span>
+    </div>
+    <div id="board"></div>
+    <div id="cars-layer"></div>
+    <div id="player">★</div>
+    <div id="message-overlay">
+      <div id="message-text"></div>
+      <button id="message-button">계속하기</button>
+    </div>
+  </div>
+
+  <script>
+    // ====== 기본 상수 ======
+    const TILE_SIZE = 50;
+    const PLAYER_SIZE = 45;               // 캐릭터 실제 크기
+
+    const ROWS = 20;                      // 전체 행 수 20
+    const VISIBLE_ROWS = 11;              // 화면에 보이는 행 수
+    const COLS = 9;                       // 가로 칸 수는 그대로 9
+    const VISIBLE_WIDTH = COLS * TILE_SIZE;
+
+    const PLAYER_START_ROW = ROWS - 1;    // 20행(인덱스 19)
+    const PLAYER_START_COL = Math.floor(COLS / 2); // 가운데 열
+
+    // 차량 최소 간격: 2.5칸
+    const MIN_GAP = 2.5 * TILE_SIZE;      // 125px
+
+    // 카메라 관련
+    const CENTER_SCREEN_ROW = Math.floor(VISIBLE_ROWS / 2); // 화면 중앙 위치 (0~10 -> 5)
+    const INITIAL_CAMERA_TOP = ROWS - VISIBLE_ROWS;         // 시작 시 아래쪽 11행을 보이게 (9~19)
+
+    const boardEl = document.getElementById('board');
+    const carsLayerEl = document.getElementById('cars-layer');
+    const playerEl = document.getElementById('player');
+    const stageTextEl = document.getElementById('stage-text');
+    const messageOverlayEl = document.getElementById('message-overlay');
+    const messageTextEl = document.getElementById('message-text');
+    const messageButtonEl = document.getElementById('message-button');
+
+    // ====== 게임 상태 ======
+    let currentStage = 1;
+    let terrain = []; // 'safe' or 'road'
+    let lanes = [];   // 도로 행 정보 (차량 포함)
+    let playerRow = PLAYER_START_ROW;
+    let playerCol = PLAYER_START_COL;
+
+    // 카메라(보이는 게임판의 최상단이 어떤 행인지)
+    let cameraTopRow = INITIAL_CAMERA_TOP;
+    let scrollingActive = false; // 중앙 도달 후 스크롤 시작 여부
+    let goalVisible = false;     // 1행(인덱스 0)이 화면에 보이기 시작했는지
+
+    // 입력 처리 (keydown 반복 방지용)
+    const pressed = {};
+
+    // 시간 관리
+    let lastTime = 0;
+
+    // 차량 색상 다양하게
+    const CAR_COLORS = [
+      '#ff4b4b', '#4b8bff', '#ffd24b', '#4bff7b',
+      '#ff4bf6', '#4bfff3', '#ffa64b', '#b84bff'
+    ];
+
+    // ====== 유틸 ======
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function randChoice(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // ====== 카메라 적용 ======
+    function applyCamera() {
+      // cameraTopRow 행이 화면의 최상단(0px)에 오도록 보드를 위로 이동
+      const clampedTop = Math.max(0, Math.min(cameraTopRow, ROWS - VISIBLE_ROWS));
+      cameraTopRow = clampedTop;
+
+      const boardOffsetY = -cameraTopRow * TILE_SIZE;
+      const transform = `translateY(${boardOffsetY}px)`;
+      boardEl.style.transform = transform;
+      carsLayerEl.style.transform = transform;
+    }
+
+    function resetCamera() {
+      cameraTopRow = INITIAL_CAMERA_TOP;
+      scrollingActive = false;
+      goalVisible = false;
+      applyCamera();
+    }
+
+    // 캐릭터 이동 후 카메라 갱신 로직
+    function updateCameraAfterMove() {
+      // 현재 카메라 기준으로 골인지점(0행)이 보이는지
+      if (!goalVisible && cameraTopRow <= 0) {
+        goalVisible = true;
+        cameraTopRow = 0;
+        applyCamera();
+        return;
+      }
+
+      // 플레이어가 화면에서 몇 번째 행에 있는지
+      const screenRow = playerRow - cameraTopRow;
+
+      // 아직 스크롤 시작 전이고, 화면 중앙에 도달했고, 골이 안 보이면 스크롤 시작
+      if (!scrollingActive) {
+        if (!goalVisible && screenRow <= CENTER_SCREEN_ROW) {
+          scrollingActive = true;
+        } else {
+          return; // 스크롤 시작 전에는 카메라 고정
+        }
+      }
+
+      // 골이 보이기 시작했다면 더 이상 카메라를 움직이지 않음
+      if (goalVisible) return;
+
+      // 플레이어를 화면 중앙에 유지하도록 카메라 위치 조정
+      let newCameraTop = playerRow - CENTER_SCREEN_ROW;
+      if (newCameraTop < 0) newCameraTop = 0;
+      if (newCameraTop > ROWS - VISIBLE_ROWS) newCameraTop = ROWS - VISIBLE_ROWS;
+
+      if (newCameraTop !== cameraTopRow) {
+        cameraTopRow = newCameraTop;
+
+        if (cameraTopRow <= 0) {
+          cameraTopRow = 0;
+          goalVisible = true; // 골이 보이기 시작
+        }
+
+        applyCamera();
+      }
+    }
+
+    // ====== 지형 생성 ======
+    function generateTerrain() {
+      // 기본은 모두 도로로 시작
+      terrain = new Array(ROWS).fill('road');
+
+      // 1행, 20행(인덱스 0, 19)은 항상 안전지대
+      terrain[0] = 'safe';
+      terrain[ROWS - 1] = 'safe';
+
+      // 그 외 2~19행(인덱스 1~18)에서 안전지대 1~4개 랜덤 생성
+      const extraSafeCount = randInt(1, 4);
+      const candidates = [];
+      for (let r = 1; r < ROWS - 1; r++) {
+        candidates.push(r);
+      }
+
+      // 랜덤 셔플 후 상위 extraSafeCount개를 안전지대로
+      for (let i = candidates.length - 1; i > 0; i--) {
+        const j = randInt(0, i);
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+      }
+
+      for (let i = 0; i < extraSafeCount; i++) {
+        const r = candidates[i];
+        terrain[r] = 'safe';
+      }
+    }
+
+    // ====== 지형 렌더링 ======
+    function renderTerrain() {
+      boardEl.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'row';
+        rowEl.dataset.row = r;
+
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell ' + (terrain[r] === 'road' ? 'road' : 'safe');
+          rowEl.appendChild(cell);
+        }
+
+        if (terrain[r] === 'road') {
+          const line = document.createElement('div');
+          line.className = 'road-line';
+          rowEl.appendChild(line);
+        }
+
+        boardEl.appendChild(rowEl);
+      }
+    }
+
+    // ====== 차량/차선 생성 ======
+    // 차량은 항상 보이는 게임판 밖에서 시작하도록 생성
+    function generateLanes() {
+      lanes = [];
+      carsLayerEl.innerHTML = '';
+
+      for (let r = 0; r < ROWS; r++) {
+        if (terrain[r] !== 'road') continue;
+
+        const direction = Math.random() < 0.5 ? 1 : -1; // 1: 오른쪽, -1: 왼쪽
+        // 스테이지가 올라갈수록 속도 조금씩 증가
+        const baseSpeed = randInt(60, 120) + (currentStage - 1) * 10;
+
+        const lane = {
+          row: r,
+          direction,
+          speed: baseSpeed,
+          cars: []
+        };
+
+        const cars = [];
+
+        if (direction === 1) {
+          // ▶ 오른쪽 이동: 모두 왼쪽 화면 밖에서 시작
+          // currentX는 0보다 확실히 왼쪽에서 시작해서 더 왼쪽으로 쭉 배치
+          let currentX = -MIN_GAP - randInt(0, VISIBLE_WIDTH); // 대략 [-575, -125] 근처
+
+          while (currentX > -VISIBLE_WIDTH * 3) { // 너무 멀리까지는 안 감
+            const sizeType = randChoice([1, 1.5, 2]);
+            const width = sizeType * TILE_SIZE;
+
+            const carX = currentX; // 항상 x + width < 0인 영역에 위치하게 됨
+            const carEl = document.createElement('div');
+            carEl.className = 'car';
+            carEl.style.width = width + 'px';
+            carEl.style.background = randChoice(CAR_COLORS);
+
+            const y = r * TILE_SIZE + 5;
+            carEl.style.top = y + 'px';
+            carEl.style.left = carX + 'px';
+
+            carsLayerEl.appendChild(carEl);
+
+            cars.push({
+              lane,
+              x: carX,
+              width,
+              el: carEl
+            });
+
+            // 더 왼쪽으로 이동하면서 차 생성
+            currentX -= width + MIN_GAP + randInt(0, 30);
+          }
+        } else {
+          // ◀ 왼쪽 이동: 모두 오른쪽 화면 밖에서 시작
+          let currentX = VISIBLE_WIDTH + MIN_GAP + randInt(0, VISIBLE_WIDTH); // [575, 1125] 근처
+
+          while (currentX < VISIBLE_WIDTH * 3) {
+            const sizeType = randChoice([1, 1.5, 2]);
+            const width = sizeType * TILE_SIZE;
+
+            const carX = currentX; // 항상 x >= VISIBLE_WIDTH 이상
+            const carEl = document.createElement('div');
+            carEl.className = 'car';
+            carEl.style.width = width + 'px';
+            carEl.style.background = randChoice(CAR_COLORS);
+
+            const y = r * TILE_SIZE + 5;
+            carEl.style.top = y + 'px';
+            carEl.style.left = carX + 'px';
+
+            carsLayerEl.appendChild(carEl);
+
+            cars.push({
+              lane,
+              x: carX,
+              width,
+              el: carEl
+            });
+
+            currentX += width + MIN_GAP + randInt(0, 30);
+          }
+        }
+
+        lane.cars = cars;
+        lanes.push(lane);
+      }
+    }
+
+    // ====== 플레이어 위치 갱신(화면) ======
+    function updatePlayerVisualPosition() {
+      // 각 칸(50x50)의 중앙에 45x45 캐릭터가 오도록 offset 계산
+      const offset = (TILE_SIZE - PLAYER_SIZE) / 2;
+
+      const x = playerCol * TILE_SIZE + offset;
+      const y = (playerRow - cameraTopRow) * TILE_SIZE + offset;
+
+      playerEl.style.left = x + 'px';
+      playerEl.style.top = y + 'px';
+    }
+
+    // ====== 충돌 체크 ======
+    function checkCollision() {
+      const offset = (TILE_SIZE - PLAYER_SIZE) / 2;
+      const playerX = playerCol * TILE_SIZE + offset;
+      const playerY = playerRow * TILE_SIZE + offset;
+      const playerSize = PLAYER_SIZE;
+
+      for (const lane of lanes) {
+        if (lane.row !== playerRow) continue;
+
+        for (const car of lane.cars) {
+          const carX = car.x;
+          const carY = lane.row * TILE_SIZE + 5;
+          const carWidth = car.width;
+          const carHeight = 40;
+
+          const overlapX = playerX < carX + carWidth && playerX + playerSize > carX;
+          const overlapY = playerY < carY + carHeight && playerY + playerSize > carY;
+
+          if (overlapX && overlapY) {
+            showMessage('게임 오버!', false);
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // ====== 승리 체크 ======
+    function checkGoal() {
+      if (playerRow === 0) {
+        showMessage('스테이지 클리어!', true);
+        return true;
+      }
+      return false;
+    }
+
+    // ====== 메시지 오버레이 ======
+    function showMessage(text, isClear) {
+      messageTextEl.textContent = text;
+      messageButtonEl.textContent = isClear ? '다음 스테이지' : '다시 시작';
+      messageOverlayEl.classList.add('show');
+
+      messageButtonEl.onclick = () => {
+        messageOverlayEl.classList.remove('show');
+        if (isClear) {
+          currentStage += 1;
+          startStage(currentStage);
+        } else {
+          startStage(currentStage);
+        }
+      };
+    }
+
+    // ====== 스테이지 시작 ======
+    function startStage(stage) {
+      currentStage = stage;
+      stageTextEl.textContent = currentStage;
+
+      // 플레이어 논리 위치 초기화
+      playerRow = PLAYER_START_ROW;
+      playerCol = PLAYER_START_COL;
+
+      resetCamera();
+      generateTerrain();
+      renderTerrain();
+      generateLanes();
+      updatePlayerVisualPosition();
+    }
+
+    // ====== 게임 루프 ======
+    function gameLoop(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const dt = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+
+      // 차량 이동
+      for (const lane of lanes) {
+        for (const car of lane.cars) {
+          car.x += lane.direction * lane.speed * dt;
+
+          // 화면 밖으로 나가면 다시 "화면 밖"에서 등장
+          if (lane.direction === 1) { // 오른쪽 이동
+            if (car.x > VISIBLE_WIDTH + 200) {
+              // 왼쪽 화면 밖으로 리스폰
+              const sizeType = car.width / TILE_SIZE; // 대략적인 크기 유지
+              car.x = -car.width - MIN_GAP - randInt(0, VISIBLE_WIDTH);
+            }
+          } else { // 왼쪽 이동
+            if (car.x + car.width < -200) {
+              // 오른쪽 화면 밖으로 리스폰
+              const sizeType = car.width / TILE_SIZE;
+              car.x = VISIBLE_WIDTH + MIN_GAP + randInt(0, VISIBLE_WIDTH);
+            }
+          }
+
+          car.el.style.left = car.x + 'px';
+        }
+      }
+
+      if (!messageOverlayEl.classList.contains('show')) {
+        checkCollision();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ====== 입력 처리 ======
+    window.addEventListener('keydown', (e) => {
+      if (messageOverlayEl.classList.contains('show')) return;
+
+      if (pressed[e.code]) return;
+      pressed[e.code] = true;
+
+      let moved = false;
+      const prevRow = playerRow;
+
+      if (e.code === 'ArrowUp') {
+        if (playerRow > 0) {
+          playerRow -= 1;
+          moved = true;
+        }
+      } else if (e.code === 'ArrowDown') {
+        if (playerRow < ROWS - 1) {
+          playerRow += 1;
+          moved = true;
+        }
+      } else if (e.code === 'ArrowLeft') {
+        if (playerCol > 0) {
+          playerCol -= 1;
+          moved = true;
+        }
+      } else if (e.code === 'ArrowRight') {
+        if (playerCol < COLS - 1) {
+          playerCol += 1;
+          moved = true;
+        }
+      }
+
+      if (moved) {
+        // 세로 이동했으면 카메라 로직 갱신
+        if (playerRow !== prevRow) {
+          updateCameraAfterMove();
+        }
+
+        updatePlayerVisualPosition();
+
+        if (!checkGoal()) {
+          checkCollision();
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      pressed[e.code] = false;
+    });
+
+    // ====== 초기화 ======
+    startStage(1);
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
