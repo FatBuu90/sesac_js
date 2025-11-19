@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+        }
+        h3{
+            margin: 0;
+            padding: 0;
+        }
+        #color_box{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn{
+            border-radius: 25px;
+            font-size: 30px;
+            padding: 10px 30px;
+            background-color: skyblue;
+            color: white;
+            font-weight: 500;
+            border: 2px solid skyblue;
+            cursor: pointer;
+            box-shadow: 1px 4px 2px #93b9d2;
+            transition: transform 0.05s, box-shadow 0.05s;
+        }
+        .btn:hover{
+            transform: scale(1.05);
+        }
+        .btn:active{
+            transform: translateY(2px);     /* 살짝 아래로 */
+            box-shadow: 0 2px 0 rgb(147, 185, 210);    /* 그림자 줄어듦 */
+        }
+        .text_box{
+            background-color: rgba(147, 185, 210, 0.6);
+            padding: 10px 20px;
+            border: 2px solid white;
+            border-radius: 25px;
+        }
+    </style>
+</head>
+<body>    
+    <div id="color_box">
+        <button class="btn" onclick="changeColor()">색상 바꾸기</button>
+        <div class="text_box">
+            <h3>현재 색상 코드(16진수) : <span id="hex"></span></h3>
+            <h3>현재 색상 코드(rbg값) : <span id="rgb"></span></h3>
+        </div>
+    </div>
+
+    <script>
+        function changeColor() {
+            let red = Math.floor(Math.random() * 256);
+            let green = Math.floor(Math.random() * 256);
+            let blue = Math.floor(Math.random() * 256);
+
+            let rHex = red.toString(16).padStart(2, '0');
+            let gHex = green.toString(16).padStart(2, '0');
+            let bHex = blue.toString(16).padStart(2, '0');
+
+            document.getElementById("color_box").style.backgroundColor = `rgb(${red}, ${green}, ${blue})`;
+            document.getElementById("hex").innerHTML = `#${rHex}${gHex}${bHex}`;
+            document.getElementById("rgb").innerHTML = `R : ${red}, G : ${green}, B : ${blue}`;
+        }
+    </script>
+</body>
+</html>
