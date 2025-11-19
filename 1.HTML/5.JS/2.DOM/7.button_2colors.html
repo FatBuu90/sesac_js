@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #color_box{
+            border: 1px solid black;
+            width: 200px;
+            height: 200px;
+            margin-top: 20px;
+            background-color: green;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #text_box{
+            font-size: 20px;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>헬로우 DOM 버튼</h1>
+    <button onclick="changeColor_RY()">버튼1</button>
+    <button onclick="changeColor_BS()">버튼2</button>
+    <button onclick="changeColor_Reset()">버튼3</button>
+    <div id="color_box">
+        <h2 id="text_box">테스트</h2>
+    </div>
+
+    <script>
+        function changeColor_RY() {
+            document.getElementById("color_box").style.background = "linear-gradient(to right, red, yellow)";
+            document.getElementById("text_box").style.color = "purple"
+        }
+        function changeColor_BS() {
+            document.getElementById("color_box").style.background = "linear-gradient(to right, blue, skyblue)";
+            document.getElementById("text_box").style.color = "orange"
+        }
+        function changeColor_Reset() {
+            document.getElementById("color_box").style.background = "green";
+            document.getElementById("text_box").style.color = "black"
+        }
+    </script>
+</body>
+</html>

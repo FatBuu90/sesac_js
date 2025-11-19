@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #color_box{
+            border: 1px solid black;
+            width: 200px;
+            height: 200px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>헬로우 DOM 버튼</h1>
+    <button onclick="changeColor()">색상 바꾸기</button>
+    <div id="color_box"></div>
+
+    <script>
+        function changeColor() {
+            let red = Math.floor(Math.random() * 256);
+            let green = Math.floor(Math.random() * 256);
+            let blue = Math.floor(Math.random() * 256);
+            document.getElementById("color_box").style.backgroundColor = `rgb(${red}, ${green}, ${blue})`;
+        }
+    </script>
+</body>
+</html>
