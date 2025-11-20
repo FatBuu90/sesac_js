@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>버튼을 통한 숫자 제어</h1>
+    <div id="Point_Box">0</div>
+    <div>
+        <button onclick="number_inc()">+1</button>
+        <button onclick="number_dec()">-1</button>
+    </div>
+    <script>
+        let point_box = document.getElementById("Point_Box");
+        let point = parseInt(point_box.innerText); 
+        function number_inc() {
+            console.log('+1 버튼 눌림');
+            point = point + 1;
+            point_box.innerHTML = point;            
+        }
+        function number_dec() {
+            console.log('-1 버튼 눌림');
+            point = point - 1;
+            point_box.innerHTML = point;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>함수 제대로 이해하기</h1>
+    <script>
+        function add(a, b) {
+            let result = a + b;
+            return result;
+        }
+        function sub(a, b) {
+            let result = a - b;
+            return result;
+        }
+        function mul(a, b) {
+            let result = a * b;
+            return result;
+        }
+        function div(a, b) {
+            let result = a / b;
+            return result;
+        }
+
+        console.log(add(2,3));
+        console.log(sub(5,3));
+        console.log(mul(5,9));
+        console.log(div(10,2));
+
+        // 변수는 모든 내용을 다 담을 수 있다
+        // let a = 숫자 / 글자 / 불리언 / 널 / undefined / 함수
+        let multiply = mul; // 함수를 통째로 담을 수도 있음
+        console.log(multiply(3,4));  
+
+        let multiplyAgain = function(x, y) {  // 함수를 만들어서 담을 수도 있음
+            return x * y;
+        }
+        console.log(multiplyAgain(5,6));
+        
+        let multiplyAgain2 = (x, y) => x * y; // 위 함수를 화살표 함수로 축약한 것
+        console.log(multiplyAgain2(7,7));
+
+        let division = div;
+        let divisionAgain = function(x, y) {
+            return x / y;
+        }
+        let divisionAgain2 = (x, y) => x / y;
+
+    </script>
+</body>
+</html>
