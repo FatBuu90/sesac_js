@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .disabled{
+            pointer-events: none;
+            opacity: 0.5;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h1>카운트다운 타이머</h1>
+    <input type="number" id="timeInput" placeholder="초 입력">
+    <button id="btn_start" onclick="startTimer()">시작</button>
+    <button id="btn_reset" onclick="resetTimer()" class="disabled">중지</button>
+    <div id="display"></div>
+
+    <script>
+        let tInput = document.getElementById("timeInput");
+        let timeDisplay = document.getElementById("display");
+        let btn_start = document.getElementById("btn_start");
+        let btn_reset = document.getElementById("btn_reset");
+        let timerId = null;
+
+        function startTimer() {
+            let time = tInput.value;
+            btn_reset.classList.remove('disabled');
+
+            const timerElement = document.createElement('p');
+            timeDisplay.appendChild(timerElement);
+
+            timerId = setInterval(() => {
+                timerElement.textContent = `${time}초 남았습니다.`;
+                if(time == 0){
+                    timerElement.textContent = "타임 오버!";
+                    btn_reset.classList.add('disabled');
+                }       
+                
+                time -= 1;         
+            }, 1000);
+        }
+        function resetTimer() {
+            clearInterval(timerId);
+            tInput.value = "";
+            timeDisplay.innerHTML = "";
+            btn_reset.classList.add('disabled');
+        }
+    </script>
+</body>
+</html>
