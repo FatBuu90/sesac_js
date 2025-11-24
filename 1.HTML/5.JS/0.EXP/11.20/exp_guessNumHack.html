@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+        }
+        /* Chrome, Edge, Safari 등 WebKit 기반 브라우저 */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            width: 100px;
+        }
+        .game_box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        #history_box{
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #history_text{
+            margin-top: -15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game_box">
+        <h2>Guess the Number (1~100)</h2>
+        <div>
+            <input id="num" type="number">
+            <button id="trial" onclick="checkPoint()">Guess</button>
+        </div>
+        <p id="result_text"></p>
+        <div id="history_box">
+            <h3>Guess History</h3>
+            <p id="history_text"></p>
+        </div>
+    </div>
+
+    <script>
+        let result = Math.floor(Math.random() * 100) + 1;        
+        let text = document.getElementById("result_text");
+        let his_text = document.getElementById("history_text");
+        let history = "";
+        let cnt = 0;
+        
+        
+        const inputBox = document.getElementById("num");
+        const trialBtn = document.getElementById("trial");
+        /* 예제 1번
+        const guesses = [10, 20, 50, 70, 80, 90];
+        for(let i = 0; i < guesses.length; i++){
+            setTimeout(() => {
+                inputBox.value = guesses[i];
+                trialBtn.click();
+            }, 1000 * i);            
+        }
+        */
+        /* 예제 2번
+        for (let i = 1; i <= 100; i++) {
+            setTimeout(() => {
+                inputBox.value = i;
+                trialBtn.click();
+            }, 1000 * i);
+            if(result == i) {
+                break;
+            }
+        }
+        */
+        let min = 1;
+        let max = 100;
+        let output = Math.floor(Math.random() * (max - min + 1)) + min;
+        const guessNumHack = setInterval(() => {            
+            inputBox.value = output;
+            trialBtn.click();
+
+            if (result === output) {
+                clearInterval(intervalId);
+                return;
+            }
+
+            if (result > output) {
+                min = output + 1;
+            } else if (result < output) {
+                max = output - 1;
+            }
+
+            output = Math.floor(Math.random() * (max - min + 1)) + min;
+        }, 1000); 
+
+
+        function checkPoint(){
+            let point = document.getElementById("num").value;
+            cnt += 1;
+            history += `${cnt}. You guessed ${point} : `;
+            if(result == point){
+                text.innerHTML = "Correct! You guessed the number!";
+                history += `Correct! You guessed the number!`;
+                his_text.innerHTML = history;
+                document.getElementById("history_box").style.display = "flex";
+            }else if(result > point){
+                text.innerHTML = "Too low!";
+                history += `Too low!<br>`;
+            }else if(result < point){
+                text.innerHTML = "Too high!";
+                history += `Too high!<br>`;
+            }
+        }
+    </script>
+</body>
+</html>
