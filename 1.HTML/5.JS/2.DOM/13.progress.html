@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #num{
+            width: 150px;
+        }
+        #progressBar{
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+        #progress{
+            width: 1px;
+            height: 30px;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>프로그레스 바 타이머</h1>
+    <input id="num" type="number" placeholder="초를 입력하세요" min="1" max="10">
+    <button id="startBtn" onclick="start()">Start</button>
+    <button id="resetBtn" onclick="reset()">Reset</button>
+    <div id="progressBar">
+        <div id="progress"></div>
+    </div>
+
+    <script>
+        let input = document.getElementById("num");
+        let sBtn = document.getElementById("startBtn");
+        let rBtn = document.getElementById("resetBtn");
+        let box = document.getElementById("progress");
+
+        let timerId = null;
+
+        function start() {
+            let progress = 100 / input.value;
+            
+            if(timerId !== null) {
+                clearInterval(timerId);
+            }
+            currentWidth = 0;
+            box.style.width = "0%";      
+
+            timerId = setInterval(() => {
+                currentWidth += progress;
+                if (currentWidth >= 100) {
+                    currentWidth = 100;
+                    clearInterval(timerId);
+                    timerId = null;
+                }
+                box.style.width = `${currentWidth}%`;
+            }, 1000);
+        }
+        function reset() {
+            if (timerId !== null) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+            currentWidth = 0;
+            box.style.width = "0%";
+            input.value = "";
+        }
+    </script>
+</body>
+</html>
