@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #dragItem {
+            width: 100px;
+            height: 100px;
+            background-color: #ffcc00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+        .placeholder {
+            position: absolute;
+            color: #999;
+        }
+        .container {
+            width: 200px;
+            height: 200px;
+            background-color: #f0f0f0;
+            border: 2px dashed #cccccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        #parentsDiv {
+            width: 450px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>드래그 앤 드롭</h1>
+    <div id="parentsDiv">
+        <div class="container">
+            <span class="placeholder" id="startPlaceholder">Drop Here</span>
+            <div id="dragItem" draggable="true">드래그 미</div>
+        </div>
+        <div class="container">
+            <span class="placeholder" id="dropPlaceholder1">Drop Here</span>
+        </div>
+        <div class="container">
+            <span class="placeholder" id="dropPlaceholder2">Drop Here</span>
+        </div>
+        <div class="container">
+            <span class="placeholder" id="dropPlaceholder3">Drop Here</span>
+        </div>
+    </div>
+
+    <script>
+        const item = document.getElementById('dragItem');
+        const zones = document.querySelectorAll('.container');
+
+        item.addEventListener('dragstart', () => {
+            console.log('아이템 이동');
+        });
+
+        zones.forEach(zone => {
+            zone.addEventListener('dragover', (ev) => {
+                ev.preventDefault();
+            });
+
+            zone.addEventListener('drop', (ev) => {                
+                ev.preventDefault();
+                console.log(`${zone.id}에 드랍`);
+                zone.appendChild(item);
+            });
+        });
+
+    </script>
+</body>
+</html>
