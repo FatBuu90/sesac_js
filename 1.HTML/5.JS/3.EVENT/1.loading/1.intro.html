@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        function ready() {
+            console.log("준비 완료!");
+            const heading = document.getElementById("title");
+            console.log(heading);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("준비 완료! 이제 JS를 실행할거야");
+            const heading = document.getElementById("title");
+            console.log(heading);
+        });
+
+        // const heading = document.getElementById("title");
+        // console.log(heading);
+        
+    </script>
+    <h1 id="title">헬로우 DOM</h1>
+
+</body>
+</html>
