@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            text-align: center;
+        }
+        .images {
+            cursor: pointer;
+            margin: 0;
+        }
+        .disabled {
+            display: none;
+        }
+        .hidden_box{
+            width: 500px;
+            height: 600px;
+        }
+        .slide_Container {
+            overflow: hidden;
+            width: 500px;
+            height: 500px;
+            position: relative;
+        }
+        .slides {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease; /* 이게 슬라이드 애니메이션 */
+        }
+        .slide_images {
+            flex-shrink: 0;
+            width: 500px;
+            height: 500px;
+        }
+        .btn {
+            position: absolute;
+            top: 48%;
+            background-color: rgba(245, 245, 245, 0.5);
+            padding: 10px;
+        }
+        .Lbtn {
+            display: flex;
+            justify-self: flex-start;
+        }
+        .Rbtn {
+            display: flex;
+            justify-self: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <div id="img_box" class="container ">
+        <h1>Image Gallery</h1>
+        <div>
+            <img class="images" src="images/cat.jfif" width="100px" height="100px" alt="고양이">
+            <img class="images" src="images/Hedgehog.jfif" width="100px" height="100px" alt="고슴도치">
+            <img class="images" src="images/raccoon.jpg" width="100px" height="100px" alt="라쿤">
+        </div>
+    </div>
+    <div id="hidden_box" class="disabled">
+        <div class="slide_Container">
+            <div id="slides" class="slides">
+                <img class="slide_images" src="images/cat.jfif" width="500" height="500" alt="고양이">
+                <img class="slide_images" src="images/Hedgehog.jfif" width="500" height="500" alt="고슴도치">
+                <img class="slide_images" src="images/raccoon.jpg" width="500" height="500" alt="라쿤">
+            </div>
+        </div>
+        <div class="filename" id="filename"></div>
+        <button id="Lbtn" class="btn Lbtn">Previous</button>
+        <button id="Rbtn" class="btn Rbtn">Next</button>
+    </div>
+
+    <script>
+        const img_box = document.getElementById('img_box');
+        const hidden_box = document.getElementById('hidden_box');
+        const images = document.querySelectorAll('.images');
+        let slide_img = document.querySelectorAll('.slide_images');
+        const slides = document.getElementById('slides');
+        
+        let currentIndex = 0;
+        const slideWidth = 500;
+
+        goToSlide(currentIndex);
+
+        function goToSlide(index) {
+            currentIndex = index;
+            slides.style.transform = `translateX(-${slideWidth * currentIndex}px)`;
+            updateFileName(currentIndex);
+        }
+
+        images.forEach((img, index) => {
+            img.addEventListener('click', (ev) => {
+                img_box.classList.add('disabled');
+                hidden_box.classList.remove('disabled');
+                goToSlide(index);
+            });
+        });
+
+        function updateFileName(index) {
+            const fileName = document.getElementById('filename');
+            fileName.textContent = slide_img[index].src.split('/').pop();
+        };
+
+        
+
+        document.getElementById('Lbtn').addEventListener('click', () => {
+            const nextIndex = (currentIndex === 0) ? slide_img.length - 1 : currentIndex - 1;
+            goToSlide(nextIndex);
+        });
+
+        document.getElementById('Rbtn').addEventListener('click', () => {
+            const nextIndex = (currentIndex === slide_img.length - 1) ? 0 : currentIndex + 1;
+            goToSlide(nextIndex);
+        });
+    </script>
+</body>
+</html>
